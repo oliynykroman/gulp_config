@@ -3,7 +3,7 @@ var watch = require('gulp-watch');
 var less = require('gulp-less');
 var path = require('path');
 var LessAutoprefix = require('less-plugin-autoprefix');
-var autoprefix = new LessAutoprefix({ browsers: ['last 4 versions'] });
+var autoprefix = new LessAutoprefix({browsers: ['last 4 versions']});
 var LessPluginCleanCSS = require('less-plugin-clean-css'),
     cleanCSSPlugin = new LessPluginCleanCSS({advanced: true});
 var sourcemaps = require('gulp-sourcemaps');
@@ -15,41 +15,45 @@ var injectSvg = require('gulp-inject-svg');
 browserSync = require("browser-sync"),
     reload = browserSync.reload;
 // big PATH
+var TemplatePath = 'palyvotemplate';
+var TemplateAppPath = 'palyvotemplate_app';
+var projectTarget = "http://localhost/palyvo.com.ua/www/default.php";
 var path = {
     build: { //prod
-        html: 'build/',
-        js: 'build/js/',
-        css: 'build/css/',
-        img: 'build/img/',
-        fonts: 'build/fonts/'
+        html: TemplatePath,
+        js: TemplatePath + '/js/',
+        css: TemplatePath + '/css/',
+        img: TemplatePath + '/images/',
+        fonts: TemplatePath + '/fonts/'
     },
     src: { //develop
-        html: 'app/*index.php, app/*index-ru.php, app/*index-en.php',
-        js: 'app/js/*.js',
-        style: 'app/less/*.less',
-        img: 'app/img/**/*.*',
-        sprite: 'app/img/*.png',
-        fonts: 'app/fonts/**/*.*'
+        html: TemplateAppPath+'*default.php',
+        js: TemplateAppPath+'/js/*.js',
+        style: TemplateAppPath+'/less/*.less',
+        img: TemplateAppPath+'/images/**/*.*',
+        sprite: TemplateAppPath+'/images/*.png',
+        fonts: TemplateAppPath+'/fonts/**/*.*'
     },
     watch: { //watch folder _ files
-        html: 'app/*index.php',
-        js: 'app/js/*.js',
-        style: 'app/less/**/*.less',
-        img: 'app/img/**/*.*',
-        sprite: 'build/img/*.png',
-        fonts: 'app/fonts/**/*.*'
+        html: TemplateAppPath + '/*default.php',
+        js: TemplateAppPath+'/js/*.js',
+        style: TemplateAppPath+'/less/**/*.less',
+        img: TemplateAppPath+'/images/**/*.*',
+        sprite: TemplateAppPath+'/images/*.png',
+        fonts: TemplateAppPath+'/fonts/**/*.*'
     },
-    clean: './build'
+    clean: './'+TemplatePath
 };
 //work with html
 gulp.task('html:build', function () {
-   return gulp.src(path.src.html)
-       .pipe(injectSvg())
+    return gulp.src(path.src.html)
+        .pipe(injectSvg())
         .pipe(gulp.dest(path.build.html))
         .pipe(reload({stream: true}));
 });
 //work with less
 gulp.task('less:build', function () {
+    console.log(path.src.style);
     return gulp.src(path.src.style)
         .pipe(sourcemaps.init())
         .pipe(less({
@@ -61,7 +65,7 @@ gulp.task('less:build', function () {
 });
 //work with js
 gulp.task('js:build', function () {
-   return gulp.src(path.src.js)
+    return gulp.src(path.src.js)
         .pipe(uglify())
         .pipe(gulp.dest(path.build.js));
 });
@@ -79,7 +83,7 @@ gulp.task('image:build', function () {
 
 });
 //sprites
-gulp.task('sprite:build', function(){
+gulp.task('sprite:build', function () {
     var spriteData =
         gulp.src(path.src.sprite)
             .pipe(spritesmith({
@@ -100,23 +104,23 @@ gulp.task('build', [
     'sprite:build',
 ]);
 //all watch
-gulp.task('watch', function(){
-    watch([path.watch.html], function(event, cb) {
+gulp.task('watch', function () {
+    watch([path.watch.html], function (event, cb) {
         gulp.start('html:build');
     });
-    watch([path.watch.style], function(event, cb) {
+    watch([path.watch.style], function (event, cb) {
         gulp.start('less:build');
     });
-    watch([path.watch.js], function(event, cb) {
+    watch([path.watch.js], function (event, cb) {
         gulp.start('js:build');
     });
-    watch([path.watch.img], function(event, cb) {
+    watch([path.watch.img], function (event, cb) {
         gulp.start('image:build');
     });
-    watch([path.watch.img], function(event, cb) {
+    watch([path.watch.img], function (event, cb) {
         gulp.start('sprite:build');
     });
-    watch([path.watch.fonts], function(event, cb) {
+    watch([path.watch.fonts], function (event, cb) {
         gulp.start('fonts:build');
     });
 });
@@ -124,7 +128,7 @@ gulp.task('watch', function(){
 gulp.task('webserver', function () {
     browserSync.init({
         proxy: {
-            target: "http://localhost/snailsfarm/www/build/index.php",
+            target: projectTarget
         }
     });
 });

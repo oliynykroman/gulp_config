@@ -1,7 +1,7 @@
 {
-  "name": "basic setup",
+  "name": "snailsfarm",
   "version": "1.0.0",
-  "description": "this is basic modules setup file for gulp in ASIGN",
+  "description": "landing page for snails farm ",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
