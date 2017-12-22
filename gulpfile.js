@@ -8,10 +8,15 @@ var LessPluginCleanCSS = require('less-plugin-clean-css'),
     cleanCSSPlugin = new LessPluginCleanCSS({advanced: true});
 var sourcemaps = require('gulp-sourcemaps');
 var uglify = require('gulp-uglify');
-var pump = require('pump');
 var spritesmith = require('gulp.spritesmith');
 const imagemin = require('gulp-imagemin');
 var injectSvg = require('gulp-inject-svg');
+
+var svgSprite = require('gulp-svg-sprites'),
+    svgmin = require('gulp-svgmin'),
+    cheerio = require('gulp-cheerio'),
+    replace = require('gulp-replace');
+
 browserSync = require("browser-sync"),
     reload = browserSync.reload;
 // big PATH
@@ -53,7 +58,6 @@ gulp.task('html:build', function () {
 });
 //work with less
 gulp.task('less:build', function () {
-    console.log(path.src.style);
     return gulp.src(path.src.style)
         .pipe(sourcemaps.init())
         .pipe(less({
@@ -95,6 +99,40 @@ gulp.task('sprite:build', function () {
     spriteData.css.pipe(gulp.dest(path.build.css));
 
 });
+
+//SVG Sprite + normalization
+
+gulp.task('svgSprite:Build', function () {
+    return gulp.src(path.src.sprite + '/icons/*.svg')
+    // minify svg
+        .pipe(svgmin({
+            js2svg: {
+                pretty: true
+            }
+        }))
+        // remove all fill and style declarations in out shapes
+        .pipe(cheerio({
+            run: function ($) {
+                $('[fill]').removeAttr('fill');
+                $('[style]').removeAttr('style');
+            },
+            parserOptions: { xmlMode: true }
+        }))
+        // cheerio plugin create unnecessary string '>', so replace it.
+        .pipe(replace('&gt;', '>'))
+        // build svg sprite
+        .pipe(svgSprite({
+                mode: "symbols",
+                preview: false,
+                selector: "icon-%f",
+                svg: {
+                    symbols: 'symbol_sprite.html'
+                }
+            }
+        ))
+        .pipe(gulp.dest(path.src.sprite + 'i/'));
+});
+
 //all start
 gulp.task('build', [
     'html:build',
@@ -102,6 +140,7 @@ gulp.task('build', [
     'less:build',
     'image:build',
     'sprite:build',
+    'svgSprite:Build'
 ]);
 //all watch
 gulp.task('watch', function () {
@@ -119,6 +158,9 @@ gulp.task('watch', function () {
     });
     watch([path.watch.img], function (event, cb) {
         gulp.start('sprite:build');
+    });
+    watch([path.watch.fonts], function (event, cb) {
+        gulp.start('svgSprite:Build');
     });
     watch([path.watch.fonts], function (event, cb) {
         gulp.start('fonts:build');
