@@ -10,50 +10,55 @@ var sourcemaps = require('gulp-sourcemaps');
 var uglify = require('gulp-uglify');
 var spritesmith = require('gulp.spritesmith');
 const imagemin = require('gulp-imagemin');
-var injectSvg = require('gulp-inject-svg');
+var svgInject  = require('gulp-svg-inject');
 
 var svgSprite = require('gulp-svg-sprites'),
     svgmin = require('gulp-svgmin'),
     cheerio = require('gulp-cheerio'),
     replace = require('gulp-replace');
 
-browserSync = require("browser-sync"),
-    reload = browserSync.reload;
+browserSync = require("browser-sync"),    reload = browserSync.reload;
 // big PATH
 var TemplatePath = 'palyvotemplate';
 var TemplateAppPath = 'palyvotemplate_app';
 var projectTarget = "http://localhost/palyvo.com.ua/www/default.php";
 var path = {
     build: { //prod
-        html: TemplatePath,
+        html: TemplatePath+'/html/',
         js: TemplatePath + '/js/',
         css: TemplatePath + '/css/',
         img: TemplatePath + '/images/',
-        fonts: TemplatePath + '/fonts/'
+        fonts: TemplatePath + '/fonts/',
+        sprite: TemplateAppPath+'/images/icons/',
     },
     src: { //develop
-        html: TemplateAppPath+'*default.php',
+        html: TemplateAppPath+'/html/**/*.*',
         js: TemplateAppPath+'/js/*.js',
         style: TemplateAppPath+'/less/*.less',
         img: TemplateAppPath+'/images/**/*.*',
-        sprite: TemplateAppPath+'/images/*.png',
+        sprite: TemplateAppPath+'/images/icons/*.svg',
+        css: TemplateAppPath+'/css/*.css',
         fonts: TemplateAppPath+'/fonts/**/*.*'
     },
     watch: { //watch folder _ files
-        html: TemplateAppPath + '/*default.php',
+        html: TemplateAppPath + '/html/**/*.*',
         js: TemplateAppPath+'/js/*.js',
         style: TemplateAppPath+'/less/**/*.less',
         img: TemplateAppPath+'/images/**/*.*',
-        sprite: TemplateAppPath+'/images/*.png',
+        sprite: TemplateAppPath+'/images/icons/*.svg',
         fonts: TemplateAppPath+'/fonts/**/*.*'
     },
     clean: './'+TemplatePath
 };
 //work with html
-gulp.task('html:build', function () {
+gulp.task('htmlMove:build', function () {
     return gulp.src(path.src.html)
-        .pipe(injectSvg())
         .pipe(gulp.dest(path.build.html))
+        .pipe(reload({stream: true}));
+});
+gulp.task('cssMove:build', function () {
+    return gulp.src(path.src.css)
+        .pipe(gulp.dest(path.build.css))
         .pipe(reload({stream: true}));
 });
 //work with less
@@ -73,6 +78,10 @@ gulp.task('js:build', function () {
         .pipe(uglify())
         .pipe(gulp.dest(path.build.js));
 });
+gulp.task('fonts:build', function () {
+    return gulp.src(path.src.fonts)
+        .pipe(gulp.dest(path.build.fonts));
+});
 //work with images
 gulp.task('image:build', function () {
     return gulp.src(path.src.img)
@@ -86,24 +95,10 @@ gulp.task('image:build', function () {
         .pipe(reload({stream: true}));
 
 });
-//sprites
-gulp.task('sprite:build', function () {
-    var spriteData =
-        gulp.src(path.src.sprite)
-            .pipe(spritesmith({
-                imgName: 'sprite.png',
-                cssName: 'sprite.css',
-            }));
-
-    spriteData.img.pipe(gulp.dest(path.build.img));
-    spriteData.css.pipe(gulp.dest(path.build.css));
-
-});
 
 //SVG Sprite + normalization
-
 gulp.task('svgSprite:Build', function () {
-    return gulp.src(path.src.sprite + '/icons/*.svg')
+    return gulp.src(path.src.sprite)
     // minify svg
         .pipe(svgmin({
             js2svg: {
@@ -126,26 +121,30 @@ gulp.task('svgSprite:Build', function () {
                 preview: false,
                 selector: "icon-%f",
                 svg: {
-                    symbols: 'symbol_sprite.html'
+                    symbols: 'symbol_sprite.svg'
                 }
             }
         ))
-        .pipe(gulp.dest(path.src.sprite + 'i/'));
+        .pipe(gulp.dest(path.build.sprite));
 });
 
 //all start
 gulp.task('build', [
-    'html:build',
+    'htmlMove:build',
+    'cssMove:build',
     'js:build',
     'less:build',
     'image:build',
-    'sprite:build',
+    'fonts:build',
     'svgSprite:Build'
 ]);
 //all watch
 gulp.task('watch', function () {
     watch([path.watch.html], function (event, cb) {
-        gulp.start('html:build');
+        gulp.start('htmlMove:build');
+    });
+    watch([path.watch.html], function (event, cb) {
+        gulp.start('cssMove:build');
     });
     watch([path.watch.style], function (event, cb) {
         gulp.start('less:build');
@@ -155,9 +154,6 @@ gulp.task('watch', function () {
     });
     watch([path.watch.img], function (event, cb) {
         gulp.start('image:build');
-    });
-    watch([path.watch.img], function (event, cb) {
-        gulp.start('sprite:build');
     });
     watch([path.watch.fonts], function (event, cb) {
         gulp.start('svgSprite:Build');
@@ -174,6 +170,7 @@ gulp.task('webserver', function () {
         }
     });
 });
+
 //clera if i neeed!!
 gulp.task('clean', function (cb) {
     rimraf(path.clean, cb);
