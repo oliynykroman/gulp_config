@@ -19,9 +19,9 @@ var svgSprite = require('gulp-svg-sprites'),
 
 browserSync = require("browser-sync"),    reload = browserSync.reload;
 // big PATH
-var TemplatePath = 'palyvotemplate';
-var TemplateAppPath = 'palyvotemplate_app';
-var projectTarget = "http://localhost/palyvo.com.ua/www/default.php";
+var TemplatePath = 'vyshyvankatemplate';
+var TemplateAppPath = TemplatePath +'_app';
+var projectTarget = "http://localhost/vyshyvanka.lviv.ua/www/default.php";
 var path = {
     build: { //prod
         html: TemplatePath+'/html/',
